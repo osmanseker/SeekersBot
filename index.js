@@ -14,6 +14,9 @@ client.on("messageCreate",msg =>{
     if(msg.content.toLowerCase()==="hello"){
         msg.reply("whatup")
     }
+    client.on("ready",()=>{
+        console.log("Ready")
+    })
 })
 
 
