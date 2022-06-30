@@ -10,6 +10,10 @@ client.on("messageCreate",msg =>{
     if(msg.content.toLowerCase()==="ping"){
         msg.reply("Night")
     }
+    
+    if(msg.content.toLowerCase()==="hello"){
+        msg.reply("whatup")
+    }
 })
 
 
