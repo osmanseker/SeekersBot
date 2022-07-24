@@ -1,5 +1,6 @@
 require("dotenv").config();
 const{Client, Intents} = require("discord.js");
+const {MessageEmbed} = require('discord.js');
 
 var serverID = "992065837202686033";
 
@@ -18,6 +19,14 @@ client.on("messageCreate",msg =>{
         msg.reply("whatup")
     }
 })
+
+
+const embed = new MessageEmbed()
+  .setTitle('Rules')
+  .setDescription('These are the rules')
+
+let channel = client.channels.cache.get(1000765418291609641)
+channel.send({embeds: [embed]})
 
 
 
