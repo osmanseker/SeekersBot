@@ -17,6 +17,7 @@ console.log(f);
 client.on("ready", () => {
     console.log("Ready")
     f.rules(client);
+    f.welcome(client);
 })
 
 client.on("messageCreate", msg => {
