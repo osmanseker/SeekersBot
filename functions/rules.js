@@ -1,4 +1,4 @@
-const { MessageEmbed } = require('discord.js');
+const { MessageEmbed} = require('discord.js');
 
 module.exports = async function(client){
     const embed = new MessageEmbed()
@@ -6,7 +6,54 @@ module.exports = async function(client){
         .setColor(0xFF0000)
         .setImage('attachment://rules.png')
 
+        
     let channel = await client.channels.cache.get("1000765418291609641")
-    await channel.send({ embeds: [embed],files:['./images/rules.png']})
+    
+    const memberemoji = '👍';
+
+    var message = await channel.send({ embeds: [embed],files:['./images/rules.png']})
+    
+    message.react(memberemoji);    
+
+    client.on("messageReactionAdd", async(reaction, user) => {
+        if(reaction.message.partial)await reaction.message.fetch();
+        if(reaction.partial)await reaction.fetch();
+        if(user.bot)return;
+        if(!reaction.message.guild)return;
+    
+        let channel = await client.channels.cache.get("1000765418291609641")
+    
+        if(reaction.message.channel.id == channel){
+            const guild = client.guilds.cache.get("992065837202686033");
+            const memberrole = guild.roles.cache.find(role => role.name === "member")
+            const memberemoji = '👍';
+            if(reaction.emoji.name === memberemoji){
+                await reaction.message.guild.members.cache.get(user.id).roles.add(memberrole);
+            }
+        }else {
+            return;
+        }
+    });
+
+    client.on("messageReactionRemove", async(reaction, user) => {
+        if(reaction.message.partial)await reaction.message.fetch();
+        if(reaction.partial)await reaction.fetch();
+        if(user.bot)return;
+        if(!reaction.message.guild)return;
+    
+        let channel = await client.channels.cache.get("1000765418291609641")
+    
+        if(reaction.message.channel.id == channel){
+            const guild = client.guilds.cache.get("992065837202686033");
+            const memberrole = guild.roles.cache.find(role => role.name === "member")
+            const memberemoji = '👍';
+            if(reaction.emoji.name === memberemoji){
+                await reaction.message.guild.members.cache.get(user.id).roles.remove(memberrole);
+            }
+        }else {
+            return;
+        }
+    })
 }
+
 
