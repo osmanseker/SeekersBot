@@ -1,6 +1,8 @@
 require("dotenv").config();
+const { channel } = require("diagnostics_channel");
 const { Client, Intents, MessageEmbed } = require("discord.js");
 const fs = require('fs');
+
 
 var serverID = "992065837202686033";
 
@@ -15,23 +17,25 @@ for (const file of functionsFiles) {
     f[file.replace('.js', '')] = func
 }
 
+let isSentWordle = false
+
 client.on("ready", () => {
     console.log("SeekerBot is ready")
     f.rules(client);
     f.welcome(client);
 
-    //message for wordle
+    //Daily message for wordle
     setInterval(() => {
-        const embed = new MessageEmbed()
-        .setTitle("It's Wordle Time!\n ")
-        .setDescription("https://www.nytimes.com/games/wordle/index.html \n\nDon't forget to share your results! \n\nWill you be the today's Wordle Wrecker?")
-        .setColor(0xFF0000)
-        .setImage('attachment://wordle.png')
-
-    let channel =  client.channels.cache.get("1007343624675143800")
-    channel.send({ embeds: [embed], files:['./images/wordle.png']})
-
-    },10000);
+        const hours = new Date().getHours()
+        if (hours == 00 && !isSentWordle) {
+            sendWordle();
+            isSentWordle = true
+        }
+        if(hours == 23){
+            isSentWordle = false
+        }
+        //set interval here, now its every 5 seconds
+    }, 5000);
 
     
 })
@@ -43,5 +47,15 @@ client.on("messageCreate", msg => {
     }
 })
 
+function sendWordle() {
+    const embed = new MessageEmbed()
+        .setTitle("It's Wordle Time!\n ")
+        .setDescription("https://www.nytimes.com/games/wordle/index.html \n\nDon't forget to share your results! \n\nWill you be the today's Wordle Wrecker?")
+        .setColor(0xFF0000)
+        .setImage('attachment://wordle.png')
+
+    let channel = client.channels.cache.get("1007343624675143800")
+    channel.send({ embeds: [embed], files: ['./images/wordle.png'] })
+}
 
 client.login(process.env.BOT_TOKEN)
