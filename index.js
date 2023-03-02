@@ -1,7 +1,7 @@
 //requirements
 require("dotenv").config();
 const { channel } = require("diagnostics_channel");
-const { Client, Intents, MessageEmbed } = require("discord.js");
+const { Client, Intents, MessageEmbed, User } = require("discord.js");
 const fs = require('fs');
 const TwitchAPI = require('node-twitch').default
 
@@ -14,12 +14,12 @@ var serverID = "992065837202686033";
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MEMBERS, Intents.FLAGS.GUILD_MESSAGE_REACTIONS], partials: ["MESSAGE", "CHANNEL", "REACTION"] });
 
 //function to post embeds
-var f = {}
+var functionsdir = {}
 const functionsFiles = fs.readdirSync('./functions').filter(file => file.endsWith('.js'));
 for (const file of functionsFiles) {
     const func = require(`./functions/${file}`)
 
-    f[file.replace('.js', '')] = func
+    functionsdir[file.replace('.js', '')] = func
 }
 
 //Wordle message
@@ -29,8 +29,8 @@ let isLiveMemory = false
 
 client.on("ready", () => {
     console.log("SeekerBot is ready")
-    f.rules(client);
-    f.welcome(client);
+    functionsdir.rules(client);
+    functionsdir.welcome(client);
 
     setInterval(() => {
         const hours = new Date().getHours()
@@ -48,6 +48,19 @@ client.on("ready", () => {
     }, 5000);
 
 })
+
+//function to welcome new members with message
+const ruleschannelid = '1000765418291609641'
+client.on('guildMemberAdd', member => {
+    const embed = new MessageEmbed()
+    .setDescription(`Welcome to the Seeker Community <@${member.id}>!\n\nMake sure you check-out the ${member.guild.channels.cache.get(ruleschannelid).toString()} to know what is and isn't permitted in this server and to get your member role! ❤`)
+    .setColor(0xFF0000)
+    .setImage('attachment://welcome.png')
+
+    let channel = client.channels.cache.get("1000783736050286723")
+    channel.send({ embeds: [embed],files:['./images/welcome.png']})
+})
+
 
 //function for the daily wordle messages in embed
 function sendWordle() {
