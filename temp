@@ -1,0 +1,66 @@
+//time member out when using blacklist words, after 3 timeouts its a kick
+client.on("messageCreate", async (message, member) => {
+    if (message.author.bot) return;
+    const blacklist = ["nigger"];
+    const maxTimeouts = 3; // maximum number of timeouts before kick
+
+    // map to keep track of timeouts for each member
+    const timeouts = new Map();
+    const timeoutCount = timeouts.get(message.author.id);
+    const content = message.content.toLowerCase();
+    if (blacklist.some(word => content.includes(word))) {
+        message.delete();
+        setTimeout(() => { }, 3000);
+        message.reply(`currently you are on ${timeoutCount + 1} timeouts`);
+
+
+        if (timeouts.has(message.author.id)) {
+            timeouts.set(message.author.id, timeoutCount + 1);
+        }
+        if (timeoutCount >= maxTimeouts) {
+            message.member.kick('Exceeded maximum number of timeouts for using profanity. You are kicked from the server');
+            timeouts.delete(message.author.id);
+        }
+
+        else {
+            timeouts.set(message.author.id, (timeouts.get(message.author.id) || 0) + 1);
+            const member = message.member;
+            if (member) {
+                try {
+                    await member.roles.add("1081363922986221648"); //ID of  timeout role
+                    setTimeout(async () => {
+                        await member.roles.remove("1081363922986221648");
+                    }, 10000); // remove the timeout role after 5 minutes
+                } catch (err) {
+                    console.log(err);
+                }
+            }
+        }
+    }
+})
+
+
+
+
+client.on("messageCreate", async (message, member) => {
+    const blacklist = ["nigger"];
+    const content = message.content.toLowerCase();
+      
+      if (blacklist.some(word => content.includes(word))) {
+        message.delete();
+        setTimeout(() => { }, 3000);
+        message.reply("Please do not use that language!");
+    
+        const member = message.member;
+        if (member) {
+          try {
+            await member.roles.add("1081363922986221648"); //  ID of your timeout role
+            setTimeout(async () => {
+              await member.roles.remove("1081363922986221648");
+            }, 10000); // remove the timeout role after 5 minutes
+          } catch (err) {
+            console.log(err);
+          }
+        }
+      }
+    })

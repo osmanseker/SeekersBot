@@ -4,6 +4,7 @@ const { channel } = require("diagnostics_channel");
 const { Client, Intents, MessageEmbed, User } = require("discord.js");
 const fs = require('fs');
 const TwitchAPI = require('node-twitch').default
+const ytdl = require('ytdl-core');
 
 const twitch = new TwitchAPI({
     client_id: "tzbf5p2e9hv3u0ndnbk464avt0paak",
@@ -13,7 +14,7 @@ const twitch = new TwitchAPI({
 var serverID = "992065837202686033";
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MEMBERS, Intents.FLAGS.GUILD_MESSAGE_REACTIONS], partials: ["MESSAGE", "CHANNEL", "REACTION"] });
 
-//function to post embeds
+//function to post embeds from functions folder
 var functionsdir = {}
 const functionsFiles = fs.readdirSync('./functions').filter(file => file.endsWith('.js'));
 for (const file of functionsFiles) {
@@ -30,7 +31,6 @@ let isLiveMemory = false
 client.on("ready", () => {
     console.log("SeekerBot is ready")
     functionsdir.rules(client);
-    functionsdir.welcome(client);
 
     setInterval(() => {
         const hours = new Date().getHours()
@@ -49,17 +49,124 @@ client.on("ready", () => {
 
 })
 
+
 //function to welcome new members with message
 const ruleschannelid = '1000765418291609641'
 client.on('guildMemberAdd', member => {
     const embed = new MessageEmbed()
-    .setDescription(`Welcome to the Seeker Community <@${member.id}>!\n\nMake sure you check-out the ${member.guild.channels.cache.get(ruleschannelid).toString()} to know what is and isn't permitted in this server and to get your member role! ❤`)
-    .setColor(0xFF0000)
-    .setImage('attachment://welcome.png')
+        .setDescription(`Welcome to the Seeker Community <@${member.id}>!\n\nMake sure you check-out the ${member.guild.channels.cache.get(ruleschannelid).toString()} to know what is and isn't permitted in this server and to get your member role! ❤`)
+        .setColor(0xFF0000)
+        .setImage('attachment://welcome.png')
 
     let channel = client.channels.cache.get("1000783736050286723")
-    channel.send({ embeds: [embed],files:['./images/welcome.png']})
+    channel.send({ embeds: [embed], files: ['./images/welcome.png'] })
 })
+
+//kick a member after 3 strikes when a link besides youtube or twitch is detected
+const kickers = new Map();
+client.on("messageCreate", async (message, member) => {
+    if (message.author.bot) return; // Ignore messages from bots
+    const kickCount = kickers.get(message.author.id) || 0;
+    // Check if the message contains a link
+    const messageContent = message.content.toLowerCase();
+    if (messageContent.includes('http://') || messageContent.includes('https://')) {
+
+        // Check if the link is not a YouTube or Twitch link
+        if (!messageContent.includes('youtube.com') && !messageContent.includes('twitch.tv')) {
+            // Kick the user from the server
+            message.delete();
+            if ((kickCount < 3)) {
+                kickers.set(message.author.id, kickCount + 1);
+                message.channel.send(`${message.author} it is not allowed to send any links besides those from youtube or twitch. If you want to send links besides those 2 sites. Create a new ticket with the request!`);
+                console.log(kickCount);
+                console.log(kickers);
+            }
+            if (kickCount >= 3) {
+                message.member.kick();
+                message.channel.send(`${message.author} has been kicked because of sending unauthorized links!`);
+                kickers.delete(message.author.id);
+            }
+        }
+    }
+});
+
+
+//time member out when using blacklist words, after 3 timeouts its a kick
+// map to keep track of timeouts for each member
+const timeouts = new Map();
+const blacklist = ["nigger"];
+const maxTimeouts = 3; // maximum number of timeouts before kick
+client.on("messageCreate", async (message, member) => {
+    if (message.author.bot) return;
+    
+    const timeoutCount = timeouts.get(message.author.id) || 0;
+    const content = message.content.toLowerCase();
+    
+    if (blacklist.some(word => content.includes(word))) {
+        message.delete();
+        //message.reply(`currently you are on ${timeoutCount + 1} timeouts`);
+
+        if ((timeoutCount < maxTimeouts)) {
+            timeouts.set(message.author.id, timeoutCount + 1);
+            console.log(timeoutCount);
+            console.log(timeouts);
+        }
+        if (timeoutCount >= maxTimeouts) {
+            message.member.kick();
+            message.channel.send(`${message.author} has been kicked because of 3 timeout strikes! Please do not use any profanity words`);
+            timeouts.delete(message.author.id);
+        }
+        else {
+            timeouts.set(message.author.id, timeoutCount + 1);
+            const member = message.member;
+            if (member) {
+                try {
+                    await member.roles.add("1081363922986221648"); //ID of  timeout role
+                    message.channel.send(`${member} has been timed out for profanity and now has ${timeoutCount + 1}  timeout(s). After the 3rd timeout you will be kicked!`);
+                    setTimeout(async () => {
+                        await member.roles.remove("1081363922986221648");
+                    }, 10000); // remove the timeout role after 5 minutes
+                } catch (err) {
+                    console.log(err);
+                }
+            }
+        }
+    }
+})
+
+
+
+
+//start a poll
+client.on('messageCreate', message => {
+    if (message.content.startsWith('!poll')) {
+        const question = message.content.slice(5);
+        const embed = new MessageEmbed()
+            .setTitle('Poll')
+            .setDescription(question)
+            .setColor('#FF0000')
+            .setFooter('React to vote');
+
+        message.channel.send({ embeds: [embed] }).then(embedMessage => {
+            embedMessage.react('👍');
+            embedMessage.react('👎');
+        });
+    }
+});
+
+
+client.on('messageReactionAdd', async (reaction, user) => {
+    if (reaction.message.partial) await reaction.message.fetch();
+    if (reaction.partial) await reaction.fetch();
+    if (user.bot) return;
+    if (!reaction.message.guild) return;
+
+    if (reaction.emoji.name === '👍') {
+        // Handle upvote
+    } else if (reaction.emoji.name === '👎') {
+        // Handle downvote
+    }
+});
 
 
 //function for the daily wordle messages in embed
@@ -74,6 +181,8 @@ function sendWordle() {
     channel.send({ embeds: [embed], files: ['./images/wordle.png'] })
 }
 
+
+
 //function to post livestream message in embed
 const livestream = async () => {
     const twitchUsername = "seekergamingg"
@@ -86,21 +195,21 @@ const livestream = async () => {
         let liveChannel = client.channels.cache.get("1008385845595738153")
         if (r != undefined) {
             const embed = new MessageEmbed()
-                .setTitle(`${r.user_name} is live!`) 
+                .setTitle(`${r.user_name} is live!`)
                 .setDescription(`[${r.title}](https://www.twitch.tv/${twitchUsername})`)
                 .addField(`Viewers`, `${r.viewer_count}`)
                 .addField(`Playing`, `${r.game_name}`)
-                .setAuthor({name:`${r.user_name}`, iconURL: profileImage, url: `https://www.twitch.tv/${twitchUsername}` })
+                .setAuthor({ name: `${r.user_name}`, iconURL: profileImage, url: `https://www.twitch.tv/${twitchUsername}` })
                 .setColor(0xFF0000)
-                .setImage(`${r.getThumbnailUrl({width: 1920, height: 1080})}`)
-            
-            if(!isLiveMemory){
+                .setImage(`${r.getThumbnailUrl({ width: 1920, height: 1080 })}`)
 
-                liveChannel.send({ embeds:[embed], content: "@everyone"})
+            if (!isLiveMemory) {
+
+                liveChannel.send({ embeds: [embed], content: "@everyone" })
                 isLiveMemory = true
             }
-            
-        }else{
+
+        } else {
             isLiveMemory = false
         }
 
