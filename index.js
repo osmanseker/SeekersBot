@@ -1,10 +1,9 @@
 //requirements
 require("dotenv").config();
-const { channel } = require("diagnostics_channel");
-const { Client, Intents, MessageEmbed, User } = require("discord.js");
+const { Client, Intents, MessageEmbed, User, channel } = require("discord.js");
 const fs = require('fs');
+const ticketCommand = require('./moderation/ticket.js');
 const TwitchAPI = require('node-twitch').default
-const ytdl = require('ytdl-core');
 
 const twitch = new TwitchAPI({
     client_id: "tzbf5p2e9hv3u0ndnbk464avt0paak",
@@ -54,7 +53,7 @@ client.on("ready", () => {
 const ruleschannelid = '1000765418291609641'
 client.on('guildMemberAdd', member => {
     const embed = new MessageEmbed()
-        .setDescription(`Welcome to the Seeker Community <@${member.id}>!\n\nMake sure you check-out the ${member.guild.channels.cache.get(ruleschannelid).toString()} to know what is and isn't permitted in this server and to get your member role! ❤`)
+        .setDescription(`Welcome to the Seeker Community <@${member.id}>!\n\nMake sure you check-out the <#${ruleschannelid}> to know what is and isn't permitted in this server and to get your member role! ❤`)
         .setColor(0xFF0000)
         .setImage('attachment://welcome.png')
 
@@ -66,6 +65,7 @@ client.on('guildMemberAdd', member => {
 const kickers = new Map();
 client.on("messageCreate", async (message, member) => {
     if (message.author.bot) return; // Ignore messages from bots
+    const isOwner = message.guild.ownerId === message.author.id;
     const kickCount = kickers.get(message.author.id) || 0;
     // Check if the message contains a link
     const messageContent = message.content.toLowerCase();
@@ -74,27 +74,29 @@ client.on("messageCreate", async (message, member) => {
         // Check if the link is not a YouTube or Twitch link
         if (!messageContent.includes('youtube.com') && !messageContent.includes('twitch.tv')) {
             // Kick the user from the server
-            message.delete();
-            if ((kickCount < 3)) {
+            if (!isOwner){
+                message.delete();
+            if ((kickCount < 5)) {
                 kickers.set(message.author.id, kickCount + 1);
-                message.channel.send(`${message.author} it is not allowed to send any links besides those from youtube or twitch. If you want to send links besides those 2 sites. Create a new ticket with the request!`);
+                message.channel.send(`${message.author} You are now on strike ${kickCount + 1} for sending a link that is not allowed. Please reread the <#${ruleschannelid}> again.`);
                 console.log(kickCount);
                 console.log(kickers);
             }
             if (kickCount >= 3) {
                 message.member.kick();
-                message.channel.send(`${message.author} has been kicked because of sending unauthorized links!`);
+                message.channel.send(`${message.author} has been kicked because of sending unauthorized links 5 times!`);
                 kickers.delete(message.author.id);
+            }
             }
         }
     }
 });
 
 
-//time member out when using blacklist words, after 3 timeouts its a kick
+//timeout a member when using blacklist words, after 3 timeouts its a kick
 // map to keep track of timeouts for each member
 const timeouts = new Map();
-const blacklist = ["nigger"];
+const blacklist = ["shit"];
 const maxTimeouts = 3; // maximum number of timeouts before kick
 client.on("messageCreate", async (message, member) => {
     if (message.author.bot) return;
@@ -133,7 +135,6 @@ client.on("messageCreate", async (message, member) => {
         }
     }
 })
-
 
 
 
@@ -215,5 +216,6 @@ const livestream = async () => {
 
     })
 }
+
 
 client.login(process.env.BOT_TOKEN)

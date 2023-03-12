@@ -2,7 +2,7 @@ const { MessageEmbed} = require('discord.js');
 
 module.exports = async function(client){
     const embed = new MessageEmbed()
-        .setDescription("Let's get over a short list of rules real quick!\n\n1. Be Respectful (No crusing, sexism, bullying, racism,… If this happens you will get a warning but the second time is a ban!\n\n2. No NSFW content – Other forms of content can be send in the media channel\n\n3. Treat mods and admins with respect\n\n4. Don't share personal information in public chats\n\n5. Talk as much as you want in the “Just Chatting” channel so we can all have a great time together!\n\nPress the thumbs up to get your memeber role ❤")
+        .setDescription("Let's get over a short list of rules real quick!\n\n1. Be Respectful (No excessive crusing, sexism, bullying, racism,… !\n\n2. No NSFW content – Other forms of content can be send in the media channel\n\n3. Treat mods and admins with respect\n\n4. Don't share personal information in public chats\n\n5. Talk as much as you want in the “Just Chatting” channel so we can all have a great time together!\n\n6. You are not allowed to send any links besides those from YouTube or Twitch. After 5 warnings you will be kicked from the server!\n\n7. Don't use profanity words! After 3 warnings you will be kicked from the server!Press the thumbs up to get your memeber role ❤")
         .setColor(0xFF0000)
         .setImage('attachment://rules.png')
 
