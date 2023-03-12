@@ -82,7 +82,7 @@ client.on("messageCreate", async (message, member) => {
                 console.log(kickCount);
                 console.log(kickers);
             }
-            if (kickCount >= 3) {
+            if (kickCount >= 5) {
                 message.member.kick();
                 message.channel.send(`${message.author} has been kicked because of sending unauthorized links 5 times!`);
                 kickers.delete(message.author.id);
@@ -127,7 +127,7 @@ client.on("messageCreate", async (message, member) => {
                     message.channel.send(`${member} has been timed out for profanity and now has ${timeoutCount + 1}  timeout(s). After the 3rd timeout you will be kicked!`);
                     setTimeout(async () => {
                         await member.roles.remove("1081363922986221648");
-                    }, 10000); // remove the timeout role after 5 minutes
+                    }, 300000); // remove the timeout role after 5 minutes
                 } catch (err) {
                     console.log(err);
                 }
@@ -146,7 +146,7 @@ client.on('messageCreate', message => {
             .setTitle('Poll')
             .setDescription(question)
             .setColor('#FF0000')
-            .setFooter('React to vote');
+            .setFooter({ text: 'React to vote' });
 
         message.channel.send({ embeds: [embed] }).then(embedMessage => {
             embedMessage.react('👍');
@@ -163,9 +163,7 @@ client.on('messageReactionAdd', async (reaction, user) => {
     if (!reaction.message.guild) return;
 
     if (reaction.emoji.name === '👍') {
-        // Handle upvote
     } else if (reaction.emoji.name === '👎') {
-        // Handle downvote
     }
 });
 
